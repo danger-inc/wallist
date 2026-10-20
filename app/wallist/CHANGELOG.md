@@ -1,5 +1,9 @@
 # wallist – Änderungen
 
+## 2.2.1 (2026-10-20)
+- **Neues Zurück-Wischen im -ist-Design**: Beim Wischen mit zwei Fingern schiebt sich die vorige Seite als Rahmen vom Rand herein – mit einem echten Bild davon und ihrem Namen im Chip. Ist der Rahmen durchgezogen, führt Loslassen zurück, und die Seite klappt über das ganze Fenster auf.
+- Nach dem Zurück-Wischen springt die Seite nicht mehr ein Stück nach oben (der erste Millimeter der Geste scrollte noch mit und lief nach).
+
 ## 2.2.0 (2026-10-20)
 - **Zurück wischen**: Zwei Finger nach rechts auf dem Touchpad (oder die Zurück-Taste der Maus) schließen die große
   Vorschau, dann geht es von „entdecken“ zurück zu „meine“ – dort ist Schluss.
