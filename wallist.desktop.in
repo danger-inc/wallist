@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=wallist
+GenericName=Hintergrundbilder
+Comment=Hintergrundbilder sammeln, setzen und neue im eigenen Stil entdecken
+Exec=@EXEC@ %F
+Icon=wallist
+Terminal=false
+Categories=Graphics;
+Keywords=wallpapaer;wallpaper;hintergrund;rotation;super+w;entdecken;pinterest;wallhaven;cosmos;
+MimeType=image/png;image/jpeg;image/webp;
+StartupWMClass=de.invincible.Wallist
