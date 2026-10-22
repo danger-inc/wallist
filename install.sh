@@ -28,6 +28,18 @@ if { (( UPDATE )) && basics_missing && say "Es fehlen Systempakete – werden na
 fi
 echo
 
+# alter Name „wallpapaer“ (bis 2026-10): alter Prozess, Menüeintrag, Icon weg; Stil-KI-Modell übernehmen,
+# alter Befehl zeigt danach auf wallist (eigene Tastenkürzel gehen weiter)
+OLD="$HOME/.local/share/wallpapaer"
+pkill -u "$(id -u)" -f "/wallpapaer/wallpapaer\.py" 2>/dev/null || true
+rm -f "$APPS/wallpapaer.desktop" "$APPS/de.invincible.Wallpapaer.desktop" "$ICONS/wallpapaer.svg"
+OLD_BIN=0; [ -e "$BIN/wallpapaer" ] || [ -L "$BIN/wallpapaer" ] && OLD_BIN=1
+if [ -d "$OLD" ] && [ ! -d "$OLD/packaging" ]; then
+    mkdir -p "$DIR"
+    [ -d "$OLD/models" ] && [ ! -e "$DIR/models" ] && mv "$OLD/models" "$DIR/models"
+    if command -v gio >/dev/null 2>&1; then gio trash "$OLD" 2>/dev/null || rm -rf "$OLD"; else rm -rf "$OLD"; fi
+fi
+
 say "Kopiere wallist nach $DIR …"
 mkdir -p "$DIR" "$RICE/fonts" "$BIN" "$APPS" "$ICONS" "$HOME/.config/wallpapers"
 cp -f "$SRC"/app/wallist/*.py "$SRC"/app/wallist/VERSION "$SRC"/app/wallist/CHANGELOG.md "$DIR/"
@@ -35,6 +47,7 @@ install -m 755 "$SRC/app/wallist/setup-ki.sh" "$DIR/setup-ki.sh"
 cp -f "$SRC/app/tui.py" "$SRC/app/glass.py" "$SRC/app/changelog.py" "$SRC/app/swipe.py" "$RICE/"   # gemeinsame Bausteine
 cp -f "$SRC"/app/fonts/* "$RICE/fonts/"                           # Symbolschrift (Icons ohne Nerd Font)
 install -m 755 "$SRC/wallist.sh" "$BIN/wallist"
+(( OLD_BIN )) && ln -sf "$BIN/wallist" "$BIN/wallpapaer"
 sed "s|@EXEC@|$BIN/wallist|g" "$SRC/wallist.desktop.in" > "$APPS/wallist.desktop"
 cp -f "$SRC/wallist.svg" "$ICONS/wallist.svg"
 refresh_desktop
