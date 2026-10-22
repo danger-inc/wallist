@@ -1,5 +1,13 @@
 # wallist – Änderungen
 
+## 2.3.0 (2026-10-22)
+- **Öffnet sofort**: wallist bleibt nach dem Schließen unsichtbar im Hintergrund bereit (wie notist und mailist),
+  der nächste Aufruf ist ohne Wartezeit da. Beim Login wird es mit `wallist --daemon` gleich vorbereitet;
+  ganz beenden mit `wallist --quit`.
+- **„entdecken“ ist schon gefüllt**: Die Suche nach neuen Bildern läuft im Hintergrund, bevor du auf den Tab
+  klickst. Vorschläge, die älter als 3 Stunden sind, werden nach dem Schließen still erneuert – nie, während du
+  gerade stöberst.
+
 ## 2.2.1 (2026-10-20)
 - **Neues Zurück-Wischen im -ist-Design**: Beim Wischen mit zwei Fingern schiebt sich die vorige Seite als Rahmen vom Rand herein – mit einem echten Bild davon und ihrem Namen im Chip. Ist der Rahmen durchgezogen, führt Loslassen zurück, und die Seite klappt über das ganze Fenster auf.
 - Nach dem Zurück-Wischen springt die Seite nicht mehr ein Stück nach oben (der erste Millimeter der Geste scrollte noch mit und lief nach).

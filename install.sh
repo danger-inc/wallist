@@ -47,6 +47,7 @@ install -m 755 "$SRC/app/wallist/setup-ki.sh" "$DIR/setup-ki.sh"
 cp -f "$SRC/app/tui.py" "$SRC/app/glass.py" "$SRC/app/changelog.py" "$SRC/app/swipe.py" "$RICE/"   # gemeinsame Bausteine
 cp -f "$SRC"/app/fonts/* "$RICE/fonts/"                           # Symbolschrift (Icons ohne Nerd Font)
 install -m 755 "$SRC/wallist.sh" "$BIN/wallist"
+"$BIN/wallist" --quit >/dev/null 2>&1 || true      # läuft wallist im Hintergrund: beenden, damit der neue Code lädt
 (( OLD_BIN )) && ln -sf "$BIN/wallist" "$BIN/wallpapaer"
 sed "s|@EXEC@|$BIN/wallist|g" "$SRC/wallist.desktop.in" > "$APPS/wallist.desktop"
 cp -f "$SRC/wallist.svg" "$ICONS/wallist.svg"

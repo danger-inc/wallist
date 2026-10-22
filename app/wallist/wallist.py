@@ -358,16 +358,41 @@ class Wallist(Gtk.Application):
         self._spin_id = None
         self._spin_i = 0
         self.last_error = None
+        self.daemon = False             # --daemon: beim Login unsichtbar vorbereiten
+        self._held = False
+        self.searched_at = 0            # wann „entdecken“ zuletzt gesucht hat (Vorladen im Hintergrund)
         for d in (THUMBS, REMOVED, CFG_DIR, WALL_DIR):
             os.makedirs(d, exist_ok=True)
         self.cleanup_removed()
 
     # ================= Start =================
     def do_activate(self):
-        if not self.win:
+        # Läuft im Hintergrund weiter (Schließen = verstecken): der nächste Aufruf kommt per D-Bus und das Fenster
+        # ist sofort da. „entdecken“ sucht schon vorher, damit die Vorschläge beim Klick auf den Tab bereitstehen.
+        first = not self.win
+        if first:
             self.build()
+        if not self._held and os.name != "nt":
+            self.hold()
+            self._held = True
+        if self.daemon:                         # Autostart: nur vorbereiten, nichts zeigen
+            self.daemon = False
+            GLib.timeout_add_seconds(8, self.preload_explore)
+            return
+        if first or not self.seen:              # noch nichts da (z. B. beim Login offline gewesen)
+            GLib.timeout_add(600, self.preload_explore)
         getattr(glass, "bring_here", lambda w: None)(self.win)
         self.win.present()
+
+    def preload_explore(self):
+        """„entdecken“ im Hintergrund füllen: beim ersten Mal und – nach dem Schließen – wenn die Vorschläge
+        älter als 3 h sind (so tauscht nichts aus, während man gerade stöbert)."""
+        if self.pending or (self.seen and time.time() - self.searched_at < 3 * 3600):
+            return False
+        if self.seen and self.win.get_visible():
+            return False
+        self.start_search()
+        return False
 
     def do_open(self, files, n, hint):
         self.do_activate()
@@ -402,9 +427,12 @@ class Wallist(Gtk.Application):
         win = WallWindow(self, "wallist", [("mine", "meine", "󰸉"), ("explore", "entdecken", "󰈈")],
                          size=(1240, 820), hints=(("strg+o", "hinzufügen"), ("strg+v", "einfügen"),
                                                   ("strg+r", "neu laden")))
-        win.set_hide_on_close(False)          # wallist läuft nicht im Hintergrund weiter
-        self.win = win
+        self.win = win                        # Schließen versteckt nur (TuiWindow), wallist bleibt bereit
+        win.connect("hide", lambda *_: self.on_hidden())
         win.add_changelog("wallist", HERE)
+        quit_act = Gio.SimpleAction.new("quit", None)
+        quit_act.connect("activate", lambda *_: self.quit())
+        self.add_action(quit_act)
         for name, cb, keys in (("add", self.on_add, ["<Control>o"]), ("paste", self.on_paste, ["<Control>v"]),
                                ("close", lambda *_: win.close(), ["<Control>w", "<Control>q"])):
             act = Gio.SimpleAction.new(name, None)
@@ -438,6 +466,11 @@ class Wallist(Gtk.Application):
 
         self.refresh_mine()
         self.pool.submit(self.safe, self.build_profile)
+
+    def on_hidden(self):
+        self.close_preview()
+        GLib.timeout_add_seconds(5, self.preload_explore)
+        GLib.timeout_add(1500, lambda: (tui.trim_memory(), False)[1])
 
     def can_back(self):
         return bool(self.preview) or self.win.current_tab() != "mine"
@@ -899,6 +932,7 @@ class Wallist(Gtk.Application):
 
     # ---------- Suche ----------
     def start_search(self):
+        self.searched_at = time.time()
         self.search_gen += 1
         tui.clear(self.res_flow)
         self.seen = set(self.added)
@@ -1176,4 +1210,17 @@ class Wallist(Gtk.Application):
 
 
 if __name__ == "__main__":
+    if "--quit" in sys.argv:                 # Hintergrund-Instanz beenden (z. B. nach einem Update)
+        app = Wallist()
+        app.register(None)
+        if app.get_is_remote():
+            app.activate_action("quit", None)
+        sys.exit(0)
+    if "--daemon" in sys.argv:               # Autostart: unsichtbar vorbereiten
+        app = Wallist()
+        app.register(None)
+        if app.get_is_remote():
+            sys.exit(0)
+        app.daemon = True
+        sys.exit(app.run([sys.argv[0]]))
     sys.exit(Wallist().run(sys.argv))
