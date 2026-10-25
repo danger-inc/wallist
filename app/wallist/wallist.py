@@ -451,7 +451,8 @@ class Wallist(Gtk.Application):
         self.overlay = Gtk.Overlay(child=root)
         # zwei Finger nach rechts / Maustaste „zurück“: Vorschau zu → entdecken → meine hintergrundbilder
         self.swipe = swipe.SwipeBack(self.overlay, self.can_back, self.go_back,
-                                     where=self.swipe_where, target=self.swipe_target)
+                                     where=self.swipe_where, target=self.swipe_target,
+                                     goto=self.swipe_goto)
         win.set_child(self.swipe.widget)
 
         win.add_page("mine", self.build_mine(), scroll=False)
@@ -486,6 +487,12 @@ class Wallist(Gtk.Application):
     def swipe_target(self):
         tab = self.win.current_tab() if self.preview else "mine"
         return ("tab", tab), self.TAB_TITLES.get(tab, tab)
+
+    def swipe_goto(self, key):
+        if key[0] != "tab":
+            return False
+        self.win.show_tab(key[1])
+        return True
 
     def go_back(self):
         if self.preview:
