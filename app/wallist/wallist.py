@@ -430,6 +430,7 @@ class Wallist(Gtk.Application):
         self.win = win                        # Schließen versteckt nur (TuiWindow), wallist bleibt bereit
         win.connect("hide", lambda *_: self.on_hidden())
         win.add_changelog("wallist", HERE)
+        win.add_design_button()
         quit_act = Gio.SimpleAction.new("quit", None)
         quit_act.connect("activate", lambda *_: self.quit())
         self.add_action(quit_act)

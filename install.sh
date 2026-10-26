@@ -44,7 +44,7 @@ say "Kopiere wallist nach $DIR …"
 mkdir -p "$DIR" "$RICE/fonts" "$BIN" "$APPS" "$ICONS" "$HOME/.config/wallpapers"
 cp -f "$SRC"/app/wallist/*.py "$SRC"/app/wallist/VERSION "$SRC"/app/wallist/CHANGELOG.md "$DIR/"
 install -m 755 "$SRC/app/wallist/setup-ki.sh" "$DIR/setup-ki.sh"
-cp -f "$SRC/app/tui.py" "$SRC/app/glass.py" "$SRC/app/changelog.py" "$SRC/app/swipe.py" "$RICE/"   # gemeinsame Bausteine
+cp -f "$SRC/app/tui.py" "$SRC/app/glass.py" "$SRC/app/istheme.py" "$SRC/app/changelog.py" "$SRC/app/swipe.py" "$RICE/"   # gemeinsame Bausteine
 cp -f "$SRC"/app/fonts/* "$RICE/fonts/"                           # Symbolschrift (Icons ohne Nerd Font)
 install -m 755 "$SRC/wallist.sh" "$BIN/wallist"
 "$BIN/wallist" --quit >/dev/null 2>&1 || true      # läuft wallist im Hintergrund: beenden, damit der neue Code lädt
