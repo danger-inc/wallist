@@ -1,5 +1,9 @@
 # wallist – Änderungen
 
+## 2.5.0 (2026-10-27)
+- **Wechsel-Animation**: Der Wechsel zwischen Hell und Dunkel (und zwischen Designs) läuft als Scanbalken über den ganzen Bildschirm. Alle Fenster, die Leiste und das Terminal wechseln darunter im selben Moment, hinter dem Balken steht das neue Design. An/aus und Dauer (Standard 1,5 s) stehen in der Designauswahl der Einstellungen.
+- Die Designauswahl (Knopf in der Kopfleiste) enthält jetzt auch die Einstellungen der Wechsel-Animation.
+
 ## 2.4.0 (2026-10-26)
 - **Design wählbar**: In den Einstellungen gibt es die Designauswahl wie in notist (Automatisch + 9 Designs). Die Wahl gilt für alle -ist-Apps zugleich und wirkt sofort. Bei „Automatisch“ (Desktop-Farben) kannst du zwischen **Dunkel** und **Hell** umschalten. Der Knopf „󰏘“ oben rechts öffnet die Auswahl.
 
