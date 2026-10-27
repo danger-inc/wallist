@@ -8,7 +8,7 @@ rm -f "$HOME/.local/bin/wallist" "$HOME/.local/share/applications/wallist.deskto
       "$HOME/.local/share/icons/hicolor/scalable/apps/wallist.svg"
 # gemeinsame Bausteine nur entfernen, wenn keine andere Suite-App (datist, musicalist) sie noch braucht
 if [ ! -d "$RICE/calendar" ] && [ ! -d "$RICE/music" ] && [ ! -d "$HOME/.local/share/mailist" ] && [ ! -d "$HOME/.local/share/sharist" ] && [ ! -d "$HOME/.local/share/linguist" ]; then
-    rm -rf "$RICE/fonts" "$RICE/tui.py" "$RICE/glass.py" "$RICE/istheme.py" "$RICE/changelog.py" "$RICE/swipe.py" "$RICE/__pycache__"
+    rm -rf "$RICE/fonts" "$RICE/tui.py" "$RICE/glass.py" "$RICE/istheme.py" "$RICE/ist-swipe.py" "$RICE/changelog.py" "$RICE/swipe.py" "$RICE/__pycache__"
     rmdir "$RICE" 2>/dev/null || true
 fi
 echo "wallist entfernt. Deine Bilder liegen weiter in ~/.config/wallpapers (Einstellungen: ~/.config/wallist)."
