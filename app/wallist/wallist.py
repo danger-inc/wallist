@@ -377,9 +377,8 @@ class Wallist(Gtk.Application):
             self._held = True
         if self.daemon:                         # Autostart: nur vorbereiten, nichts zeigen
             self.daemon = False
-            GLib.timeout_add_seconds(8, self.preload_explore)
-            return
-        if first or not self.seen:              # noch nichts da (z. B. beim Login offline gewesen)
+            return                              # „entdecken“ lädt erst beim ersten Öffnen (spart beim Login Netz, CPU und ~150 MB)
+        if first or not self.seen or time.time() - self.searched_at >= 3 * 3600:   # noch nichts da / veraltet
             GLib.timeout_add(600, self.preload_explore)
         getattr(glass, "bring_here", lambda w: None)(self.win)
         self.win.present()
@@ -388,8 +387,6 @@ class Wallist(Gtk.Application):
         """„entdecken“ im Hintergrund füllen: beim ersten Mal und – nach dem Schließen – wenn die Vorschläge
         älter als 3 h sind (so tauscht nichts aus, während man gerade stöbert)."""
         if self.pending or (self.seen and time.time() - self.searched_at < 3 * 3600):
-            return False
-        if self.seen and self.win.get_visible():
             return False
         self.start_search()
         return False
@@ -471,8 +468,24 @@ class Wallist(Gtk.Application):
 
     def on_hidden(self):
         self.close_preview()
-        GLib.timeout_add_seconds(5, self.preload_explore)
         GLib.timeout_add(1500, lambda: (tui.trim_memory(), False)[1])
+        if getattr(self, "_drop_id", None):
+            GLib.source_remove(self._drop_id)
+        self._drop_id = GLib.timeout_add_seconds(self.EXPLORE_KEEP, self.drop_explore)
+
+    EXPLORE_KEEP = 30 * 60             # so lange bleiben die Vorschläge nach dem Schließen im Speicher
+
+    def drop_explore(self):
+        """Lange versteckt: Vorschläge (Vorschaubilder) freigeben; beim nächsten Öffnen wird neu gesucht."""
+        self._drop_id = None
+        if self.win.get_visible() or not self.res_flow.get_first_child():
+            return False
+        self.search_gen += 1
+        tui.clear(self.res_flow)
+        self.seen, self.found, self.pending, self.searched_at = set(), 0, 0, 0
+        self.update_status()
+        GLib.timeout_add(1500, lambda: (tui.trim_memory(), False)[1])
+        return False
 
     def can_back(self):
         return bool(self.preview) or self.win.current_tab() != "mine"
@@ -1045,7 +1058,7 @@ class Wallist(Gtk.Application):
         txt = f"{self.found} bilder gefunden"
         if self.settings["only_matching"] and self.found:
             txt += f", {shown} passen zu deinem stil"
-        if not src.clip_available():
+        if not src.clip_installed():
             txt += " · stil-ki nicht eingerichtet (setup-ki.sh), bewertung nur grob über farben"
         if busy:
             txt = "suche läuft … " + txt

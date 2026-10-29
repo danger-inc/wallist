@@ -104,19 +104,62 @@ MODEL = os.path.expanduser("~/.local/share/wallist/models/clip-vit-b32-vision-q.
 MEAN = np.array([0.48145466, 0.4578275, 0.40821073], np.float32)
 STD = np.array([0.26862954, 0.26130258, 0.27577711], np.float32)
 _session = None
+import threading, time
+_lock = threading.Lock()
+_last = [0.0]
+_unload = None
+IDLE_UNLOAD = 60            # Sekunden ohne Bewertung, dann gibt der Daemon die KI (~300 MB) wieder frei
+
+
+def clip_installed():
+    """Modell und onnxruntime sind da – ohne die Sitzung zu laden (für Statuszeilen)."""
+    import importlib.util
+    return os.path.exists(MODEL) and importlib.util.find_spec("onnxruntime") is not None
 
 
 def clip_available():
-    global _session
-    if _session is None:
-        try:
-            import onnxruntime as ort
-            opts = ort.SessionOptions()
-            opts.log_severity_level = 3
-            _session = ort.InferenceSession(MODEL, opts, providers=["CPUExecutionProvider"])
-        except Exception:
-            _session = False
-    return bool(_session)
+    """Lädt die Stil-KI bei Bedarf; nach IDLE_UNLOAD Sekunden ohne Nutzung wird sie wieder entladen."""
+    global _session, _unload
+    with _lock:
+        if _session is None:
+            try:
+                import onnxruntime as ort
+                opts = ort.SessionOptions()
+                opts.log_severity_level = 3
+                opts.enable_cpu_mem_arena = False
+                opts.enable_mem_pattern = False
+                opts.intra_op_num_threads = 2
+                _session = ort.InferenceSession(MODEL, opts, providers=["CPUExecutionProvider"])
+            except Exception:
+                _session = False
+        _last[0] = time.monotonic()
+        if _session and _unload is None:
+            _arm()
+        return bool(_session)
+
+
+def _arm():
+    global _unload
+    _unload = threading.Timer(IDLE_UNLOAD, _free)
+    _unload.daemon = True
+    _unload.start()
+
+
+def _free():
+    global _session, _unload
+    with _lock:
+        _unload = None
+        if time.monotonic() - _last[0] < IDLE_UNLOAD - 1:       # zwischendurch benutzt: weiter warten
+            _arm()
+            return
+        _session = None
+    import gc
+    gc.collect()
+    try:
+        import ctypes
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except Exception:
+        pass
 
 
 def _crops(img):
@@ -134,7 +177,10 @@ def _crops(img):
 
 def features(img):
     if clip_available():
-        emb = _session.run(["image_embeds"], {"pixel_values": _crops(img)})[0].mean(0)
+        sess = _session
+        if not sess:
+            return ("color", color_features(img))
+        emb = sess.run(["image_embeds"], {"pixel_values": _crops(img)})[0].mean(0)
         return ("clip", (emb / np.linalg.norm(emb)).tolist())
     return ("color", color_features(img))
 
